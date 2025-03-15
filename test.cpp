@@ -144,17 +144,17 @@ void sepia_avx2(std::vector<unsigned char>& image, int width, int height, int ch
 
         __m256i pixel_data = _mm256_loadu_si256((__m256i*)(data + i));
 
-        // извлекаем цвета красный, зеленый, синий из вектора пикселей
+        // ГЁГ§ГўГ«ГҐГЄГ ГҐГ¬ Г¶ГўГҐГІГ  ГЄГ°Г Г±Г­Г»Г©, Г§ГҐГ«ГҐГ­Г»Г©, Г±ГЁГ­ГЁГ© ГЁГ§ ГўГҐГЄГІГ®Г°Г  ГЇГЁГЄГ±ГҐГ«ГҐГ©
         __m256i r = _mm256_and_si256(pixel_data, _mm256_set1_epi32(0xFF));
         __m256i g = _mm256_and_si256(_mm256_srli_epi32(pixel_data, 8), _mm256_set1_epi32(0xFF));
         __m256i b = _mm256_and_si256(_mm256_srli_epi32(pixel_data, 16), _mm256_set1_epi32(0xFF));
 
-        // преобразуем в float для вычислений
+        // ГЇГ°ГҐГ®ГЎГ°Г Г§ГіГҐГ¬ Гў float Г¤Г«Гї ГўГ»Г·ГЁГ±Г«ГҐГ­ГЁГ©
         __m256 r_f = _mm256_cvtepi32_ps(r);
         __m256 g_f = _mm256_cvtepi32_ps(g);
         __m256 b_f = _mm256_cvtepi32_ps(b);
 
-        // формула
+        // ГґГ®Г°Г¬ГіГ«Г 
         __m256 new_r = _mm256_add_ps(
             _mm256_mul_ps(r_f, coeff_r),
             _mm256_add_ps(
@@ -179,12 +179,12 @@ void sepia_avx2(std::vector<unsigned char>& image, int width, int height, int ch
             )
         );
 
-        // каст до 255 вместо явного приведения (unsigned char)
+        // ГЄГ Г±ГІ Г¤Г® 255 ГўГ¬ГҐГ±ГІГ® ГїГўГ­Г®ГЈГ® ГЇГ°ГЁГўГҐГ¤ГҐГ­ГЁГї (unsigned char)
         new_r = _mm256_min_ps(new_r, max_val);
         new_g = _mm256_min_ps(new_g, max_val);
         new_b = _mm256_min_ps(new_b, max_val);
 
-        // в int
+        // Гў int
         __m256i new_r_i = _mm256_cvtps_epi32(new_r);
         __m256i new_g_i = _mm256_cvtps_epi32(new_g);
         __m256i new_b_i = _mm256_cvtps_epi32(new_b);
@@ -195,7 +195,7 @@ void sepia_avx2(std::vector<unsigned char>& image, int width, int height, int ch
         _mm256_storeu_si256((__m256i*)(data + i), new_pixel);
     }
 
-    // Обработка оставшихся пикселей
+    // ГЋГЎГ°Г ГЎГ®ГІГЄГ  Г®Г±ГІГ ГўГёГЁГµГ±Гї ГЇГЁГЄГ±ГҐГ«ГҐГ©
     for (; i < size; i += channels) {
         unsigned char red = image[i];
         unsigned char green = image[i + 1];
@@ -215,7 +215,7 @@ std::string getPicPath(std::string path, std::string& str) {
         }
     }
 
-    std::cout << "Выберите картинку для редактирования:" << "\n";
+    std::cout << "Г‚Г»ГЎГҐГ°ГЁГІГҐ ГЄГ Г°ГІГЁГ­ГЄГі Г¤Г«Гї Г°ГҐГ¤Г ГЄГІГЁГ°Г®ГўГ Г­ГЁГї:" << "\n";
     for (int i = 0; i < fileNames.size(); i++) {
         std::cout << i << ":  " << fileNames[i] << "\n";
     }
@@ -227,14 +227,14 @@ std::string getPicPath(std::string path, std::string& str) {
 }
 
 int processing(std::vector<std::string> filters, std::vector<unsigned char>& image, int width, int height, int channels) {
-    std::cout << "Выберите режим: " << "\n";
+    std::cout << "Г‚Г»ГЎГҐГ°ГЁГІГҐ Г°ГҐГ¦ГЁГ¬: " << "\n";
     for (int i = 0; i < mods.size(); i++) {
         std::cout << i << "  " << mods[i] << "\n";
     }
     int chooseMode;
     std::cin >> chooseMode;
 
-    std::cout << "Выберите фильтр: " << "\n";
+    std::cout << "Г‚Г»ГЎГҐГ°ГЁГІГҐ ГґГЁГ«ГјГІГ°: " << "\n";
     for (int i = 0; i < filters.size(); i++) {
         std::cout << i << "  " << filters[i] << "\n";
     }
@@ -287,9 +287,7 @@ int processing(std::vector<std::string> filters, std::vector<unsigned char>& ima
         }
         break;
     }
-
-
-
+    
     return chooseFilter;
 }
 
@@ -299,7 +297,7 @@ int main() {
     setlocale(LC_ALL, "RUS");
     SetConsoleOutputCP(CP_UTF8);
 
-    std::string path = R"(C:\Users\kaio\Desktop\orig)";
+    std::string path = R"()"; // folder with photo to edit
 
     std::string picName;
     std::string findPath = getPicPath(path, picName);
@@ -310,9 +308,9 @@ int main() {
 
     int filterNum = processing(filters, image, width, height, channels);
 
-    std::string resPath = R"(C:\Users\kaio\Desktop\edited\)" + filters[filterNum] + picName;
+    std::string resPath = R"()" + filters[filterNum] + picName; // path to save edited photo
     if (!stbi_write_jpg(resPath.c_str(), width, height, channels, image.data(), 90)) {
-        std::cout << "Ошибка сохранения изображения" << std::endl;
+        std::cout << "ГЋГёГЁГЎГЄГ  Г±Г®ГµГ°Г Г­ГҐГ­ГЁГї ГЁГ§Г®ГЎГ°Г Г¦ГҐГ­ГЁГї" << std::endl;
         stbi_image_free(img);
         return 1;
     }
@@ -321,6 +319,8 @@ int main() {
     return 0;
 
 }
+
+// test system
 
 //int main() {
 //    SetConsoleOutputCP(CP_UTF8);
@@ -340,7 +340,7 @@ int main() {
 //        int width, height, channels;
 //        unsigned char* img = stbi_load(findPath.c_str(), &width, &height, &channels, 0);
 //        if (!img) {
-//            std::cerr << "Ошибка загрузки изображения: " << findPath << "\n";
+//            std::cerr << "ГЋГёГЁГЎГЄГ  Г§Г ГЈГ°ГіГ§ГЄГЁ ГЁГ§Г®ГЎГ°Г Г¦ГҐГ­ГЁГї: " << findPath << "\n";
 //            return 1;
 //
 //        }
